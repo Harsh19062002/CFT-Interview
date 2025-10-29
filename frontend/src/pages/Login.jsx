@@ -1,38 +1,37 @@
 import { useState } from "react";
-import api from "../api";
-import toast from "react-hot-toast";
-import { Link } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
 
 export default function Login() {
-  const [form, setForm] = useState({ email: "", password: "" });
-
-  const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
+  const { login } = useAuth();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    try {
-      const res = await api.post("/auth/login", form);
-      localStorage.setItem("token", res.data.token);
-      toast.success("Login successful!");
-    } catch (err) {
-      toast.error(err.response?.data?.message || "Login failed");
-    }
+    await login(email, password);
+    navigate("/dashboard");
   };
 
   return (
-    <div className="bg-white p-8 rounded-2xl shadow-md w-96">
-      <h2 className="text-2xl font-bold mb-4 text-center">Login</h2>
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <input type="email" name="email" onChange={handleChange} placeholder="Email" className="w-full border p-2 rounded" />
-        <input type="password" name="password" onChange={handleChange} placeholder="Password" className="w-full border p-2 rounded" />
-        <button className="bg-blue-600 text-white w-full py-2 rounded hover:bg-blue-700">Login</button>
+    <div className="min-h-screen flex items-center justify-center bg-gray-100">
+      <form onSubmit={handleSubmit} className="bg-white p-8 shadow rounded w-80">
+        <h2 className="text-xl font-bold mb-4">Login</h2>
+        <input type="email" placeholder="Email" className="w-full p-2 border mb-3"
+          value={email} onChange={(e) => setEmail(e.target.value)} />
+        <input type="password" placeholder="Password" className="w-full p-2 border mb-3"
+          value={password} onChange={(e) => setPassword(e.target.value)} />
+        <button type="submit" className="bg-blue-600 text-white w-full py-2 rounded">
+          Login
+        </button>
+        <Link to="/forgot-password" className="text-sm text-blue-500 mt-3 block text-center">
+          Forgot Password?
+        </Link>
+        <Link to="/signup" className="text-sm text-gray-500 mt-2 block text-center">
+          Don’t have an account? Sign up
+        </Link>
       </form>
-      <p className="text-center mt-4 text-sm">
-        Forgot your password? <Link className="text-blue-600" to="/forgot-password">Click here</Link>
-      </p>
-      <p className="text-center mt-2 text-sm">
-        New user? <Link className="text-blue-600" to="/signup">Sign up</Link>
-      </p>
     </div>
   );
 }

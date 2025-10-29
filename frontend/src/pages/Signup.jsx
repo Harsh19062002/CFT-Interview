@@ -1,38 +1,37 @@
 import { useState } from "react";
-import api from "../api";
-import toast from "react-hot-toast";
 import { Link, useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
 
 export default function Signup() {
-  const [form, setForm] = useState({ firstName: "", lastName: "", email: "", password: "" });
+  const { signup } = useAuth();
   const navigate = useNavigate();
-
-  const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
+  const [form, setForm] = useState({ firstName: "", lastName: "", email: "", password: "" });
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    try {
-      await api.post("/auth/signup", form);
-      toast.success("Signup successful!");
-      navigate("/");
-    } catch (err) {
-      toast.error(err.response?.data?.message || "Signup failed");
-    }
+    await signup(form.firstName, form.lastName, form.email, form.password);
+    navigate("/");
   };
 
   return (
-    <div className="bg-white p-8 rounded-2xl shadow-md w-96">
-      <h2 className="text-2xl font-bold mb-4 text-center">Sign Up</h2>
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <input name="firstName" onChange={handleChange} placeholder="First Name" className="w-full border p-2 rounded" />
-        <input name="lastName" onChange={handleChange} placeholder="Last Name" className="w-full border p-2 rounded" />
-        <input type="email" name="email" onChange={handleChange} placeholder="Email" className="w-full border p-2 rounded" />
-        <input type="password" name="password" onChange={handleChange} placeholder="Password" className="w-full border p-2 rounded" />
-        <button className="bg-blue-600 text-white w-full py-2 rounded hover:bg-blue-700">Sign Up</button>
+    <div className="min-h-screen flex items-center justify-center bg-gray-100">
+      <form onSubmit={handleSubmit} className="bg-white p-8 shadow rounded w-80">
+        <h2 className="text-xl font-bold mb-4">Signup</h2>
+        {["firstName", "lastName", "email", "password"].map((f) => (
+          <input
+            key={f}
+            type={f === "password" ? "password" : "text"}
+            placeholder={f.charAt(0).toUpperCase() + f.slice(1)}
+            className="w-full p-2 border mb-3"
+            value={form[f]}
+            onChange={(e) => setForm({ ...form, [f]: e.target.value })}
+          />
+        ))}
+        <button className="bg-green-600 text-white w-full py-2 rounded">Signup</button>
+        <Link to="/" className="text-sm text-gray-500 mt-3 block text-center">
+          Already have an account? Login
+        </Link>
       </form>
-      <p className="text-center mt-4 text-sm">
-        Already have an account? <Link className="text-blue-600" to="/">Login</Link>
-      </p>
     </div>
   );
 }

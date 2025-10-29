@@ -1,54 +1,70 @@
 import { useState } from "react";
-import { useParams } from "react-router-dom";
-import api from "../api";
-import toast from "react-hot-toast";
+import { useParams, useNavigate } from "react-router-dom";
+import axios from "axios";
+import { toast } from "react-hot-toast";
 
-export default function ResetPassword() {
+const ResetPassword = () => {
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const { token } = useParams();
-  const [form, setForm] = useState({ newPassword: "", confirmPassword: "" });
-  const [success, setSuccess] = useState(false);
+  const navigate = useNavigate();
+  const baseURL = "http://localhost:5000/api";
 
-  const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
-
-  const handleSubmit = async (e) => {
+  const handleReset = async (e) => {
     e.preventDefault();
-    if (form.newPassword !== form.confirmPassword) return toast.error("Passwords do not match");
+
+    // ✅ Check if passwords match before sending request
+    if (newPassword !== confirmPassword) {
+      toast.error("Passwords do not match");
+      return;
+    }
 
     try {
-      await api.post(`/auth/reset-password/${token}`, { newPassword: form.newPassword });
-      toast.success("Password reset successful!");
-      setSuccess(true);
+      const res = await axios.post(`${baseURL}/auth/reset-password/${token}`, {
+        newPassword,
+      });
+      toast.success(res.data.message);
+      navigate("/login");
     } catch (err) {
-      toast.error(err.response?.data?.message || "Reset failed");
+      toast.error(err.response?.data?.message || "Failed to reset password");
     }
   };
 
   return (
-    <div className="bg-white p-8 rounded-2xl shadow-md w-96 text-center">
-      {!success ? (
-        <>
-          <h2 className="text-2xl font-bold mb-4">Reset Password</h2>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <input
-              type="password"
-              name="newPassword"
-              onChange={handleChange}
-              placeholder="New Password"
-              className="w-full border p-2 rounded"
-            />
-            <input
-              type="password"
-              name="confirmPassword"
-              onChange={handleChange}
-              placeholder="Confirm Password"
-              className="w-full border p-2 rounded"
-            />
-            <button className="bg-blue-600 text-white w-full py-2 rounded hover:bg-blue-700">Update Password</button>
-          </form>
-        </>
-      ) : (
-        <div className="text-green-600 font-semibold text-lg">✅ Password updated successfully!</div>
-      )}
+    <div className="flex justify-center items-center min-h-screen bg-gray-100">
+      <form
+        onSubmit={handleReset}
+        className="bg-white p-6 rounded-2xl shadow-md w-80"
+      >
+        <h2 className="text-xl font-bold mb-4 text-center">Reset Password</h2>
+
+        <input
+          type="password"
+          placeholder="Enter new password"
+          value={newPassword}
+          onChange={(e) => setNewPassword(e.target.value)}
+          className="border p-2 w-full mb-3 rounded"
+          required
+        />
+
+        <input
+          type="password"
+          placeholder="Confirm new password"
+          value={confirmPassword}
+          onChange={(e) => setConfirmPassword(e.target.value)}
+          className="border p-2 w-full mb-4 rounded"
+          required
+        />
+
+        <button
+          type="submit"
+          className="bg-blue-600 text-white py-2 w-full rounded hover:bg-blue-700 transition"
+        >
+          Reset Password
+        </button>
+      </form>
     </div>
   );
-}
+};
+
+export default ResetPassword;
